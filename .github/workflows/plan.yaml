@@ -113,6 +113,6 @@ jobs:
         uses: hmanzur/actions-set-secret@v2.0.0
         if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
         with:
-          name: '_${{ steps.extract_env_name.outputs.env_name }}_TF_OUTPUT_${{ env.repo_name }}'
+          name: '_${{ steps.extract_env_name.outputs.env_name }}_TF_OUTPUT_${{ inputs.repo_name }}'
           value: '${{ steps.output_dot_env.outputs.envs }}'
           token: ${{ secrets.REPO_ACCESS_TOKEN }}

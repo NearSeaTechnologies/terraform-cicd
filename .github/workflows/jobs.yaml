@@ -1,0 +1,48 @@
+name: CI
+on: [push, pull_request]
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    name: Validate terraform configuration
+    steps:
+      - name: Git checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
+
+      - name: terraform validate
+        uses: dflook/terraform-validate@v1.22.2
+        with:
+          path: terraform
+
+  fmt-check:
+    runs-on: ubuntu-latest
+    name: Check formatting of terraform files
+    steps:
+      - name: Git checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
+
+      - name: terraform fmt
+        uses: dflook/terraform-fmt-check@v1.22.2
+        with:
+          path: terraform
+  
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
+
+      - name: Render terraform docs inside the terraformDocs.md
+        uses: terraform-docs/gh-actions@v0.11.0
+        with:
+          working-dir: terraform
+          output-file: ../terraformDocs.md
+          output-method: inject
+          git-push: ${{ github.event_name != 'pull_request' && github.ref_name == 'develop' }}
+
+      - name: Comment docs on PR
+        uses: NejcZdovc/comment-pr@v1
+        if: github.event_name == 'pull_request'
+        with:
+          file: "../../terraformDocs.md"

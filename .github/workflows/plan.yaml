@@ -1,5 +1,23 @@
 name: Terraform Plan/apply
-on: [push, pull_request]
+on:
+  workflow_call:
+    inputs:
+      repo_name:
+        required: true
+        type: string
+    secrets:
+      GITHUB_TOKEN:
+        required: true
+      ALL_SECRETS:
+        required: true
+      BACKEND_BUCKET:
+        required: true
+      BACKEND_ACCESS_KEY:
+        required: true
+      BACKEND_SECRET_KEY:
+        required: true
+      REPO_ACCESS_TOKEN:
+        required: true
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   EQUAL_ESCAPE: '_EQUAL_'
@@ -7,8 +25,6 @@ env:
 
 jobs:
   plan:
-    env:
-      repo_name: PIR_INFRASTRUCTURE
     runs-on: ubuntu-latest
     name: Plan/apply terraform
     steps:
@@ -23,7 +39,7 @@ jobs:
       - name: Create .env and .env.output.envs
         uses: shine1594/secrets-to-env-action@v1.5.2
         with:
-          secrets: ${{ toJSON(secrets) }}
+          secrets: ${{ secrets.ALL_SECRETS }}
           secrets_env: all
           # Get all secrets as .env
           prefix_prod: _${{ steps.extract_env_name.outputs.env_name }}_
@@ -35,8 +51,6 @@ jobs:
       - name: Load .env
         shell: bash
         run: |
-          # TODO: remove this
-          cat terraform/.env.output.envs
           sed -i -e '$a\' terraform/.env.output.envs
           # Inject output envs from each output secret (one per project) (for this env)
           for i in $(cat terraform/.env.output.envs)

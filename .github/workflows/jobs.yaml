@@ -1,5 +1,9 @@
 name: CI
-on: [push, pull_request]
+on:
+  workflow_call:
+    secrets:
+      GITHUB_TOKEN:
+        required: true
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 jobs:

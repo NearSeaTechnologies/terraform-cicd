@@ -6,8 +6,6 @@ on:
         required: true
         type: string
     secrets:
-      GITHUB_TOKEN:
-        required: true
       ALL_SECRETS:
         required: true
       BACKEND_BUCKET:

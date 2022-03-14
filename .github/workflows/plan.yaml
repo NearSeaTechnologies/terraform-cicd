@@ -75,9 +75,9 @@ jobs:
         with:
           path: terraform
           backend_config: |
-            bucket=${{ env.BACKEND_BUCKET }}
-            access_key=${{ env.BACKEND_ACCESS_KEY }}
-            secret_key=${{ env.BACKEND_SECRET_KEY }}
+            bucket=${{ secrets.BACKEND_BUCKET }}
+            access_key=${{ secrets.BACKEND_ACCESS_KEY }}
+            secret_key=${{ secrets.BACKEND_SECRET_KEY }}
 
       - name: terraform apply
         uses: dflook/terraform-apply@v1.22.2

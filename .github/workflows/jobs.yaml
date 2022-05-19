@@ -1,6 +1,10 @@
 name: CI
 on:
   workflow_call:
+    inputs:
+      terraform_cloud_tokens:
+        required: true
+        type: string
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

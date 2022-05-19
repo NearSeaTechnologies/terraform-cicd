@@ -36,24 +36,10 @@ jobs:
           # Get all secrets as .env
           prefix_prod: _${{ steps.extract_env_name.outputs.env_name }}_
           file_name_prod: terraform/.env
-          # Get all TF outputs secrets as .env (env=list of outputs, one per project, per env)
-          prefix_dev: _${{ steps.extract_env_name.outputs.env_name }}_TF_OUTPUT_
-          file_name_dev: terraform/.env.output.envs
 
       - name: Load .env
         shell: bash
         run: |
-          sed -i -e '$a\' terraform/.env.output.envs
-          # Inject output envs from each output secret (one per project) (for this env)
-          for i in $(cat terraform/.env.output.envs)
-          do
-            value=${i#*=}
-            value=$(echo "$value" | sed 's,${{ env.EQUAL_ESCAPE }},=,g')
-            value=$(echo "$value" | sed 's,${{ env.BREAK_LINE }},\n,g')
-            echo "\nval: $value"
-            echo "$value" >> $GITHUB_ENV
-          done
-
           # Inject all secrets as envs (for this env)
           (cat terraform/.env) >> $GITHUB_ENV
 
@@ -66,45 +52,15 @@ jobs:
       - name: terraform plan
         uses: dflook/terraform-plan@v1.22.2
         if: github.event_name == 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
+        env:
+          TERRAFORM_CLOUD_TOKENS: app.terraform.io=${{ secrets.TF_CLOUD_TOKEN }}
         with:
           path: terraform
-          backend_config: |
-            bucket=${{ env.BACKEND_BUCKET }}
-            access_key=${{ env.BACKEND_ACCESS_KEY }}
-            secret_key=${{ env.BACKEND_SECRET_KEY }}
 
       - name: terraform apply
         uses: dflook/terraform-apply@v1.22.2
         if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
+        env:
+          TERRAFORM_CLOUD_TOKENS: app.terraform.io=${{ secrets.TF_CLOUD_TOKEN }}
         with:
           path: terraform
-          backend_config: |
-            bucket=${{ env.BACKEND_BUCKET }}
-            access_key=${{ env.BACKEND_ACCESS_KEY }}
-            secret_key=${{ env.BACKEND_SECRET_KEY }}
-
-      - name: Get outputs
-        uses: dflook/terraform-output@v1
-        if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
-        id: tf_outputs
-        with:
-          path: terraform
-      - name: Prepare output as .env
-        if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
-        run: |
-          # Escape equal sign
-          OUTPUT_ENVS=$(echo "${{ toJson(steps.tf_outputs.outputs) }}" | jq -r "to_entries|map(\"TF_VAR_\(.key)${{ env.EQUAL_ESCAPE }}\(.value|tostring)\")|.[]")
-          # Remove \n
-          OUTPUT_ENVS="${OUTPUT_ENVS//$'\n'/${{ env.BREAK_LINE }}}"
-          OUTPUT_ENVS="${OUTPUT_ENVS//$'\r'}"
-          echo "##[set-output name=envs;]$OUTPUT_ENVS"
-        shell: bash
-        id: output_dot_env
-
-      - name: Save output as secret
-        uses: hmanzur/actions-set-secret@v2.0.0
-        if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
-        with:
-          name: '_${{ steps.extract_env_name.outputs.env_name }}_TF_OUTPUT_${{ inputs.repo_name }}'
-          value: '${{ steps.output_dot_env.outputs.envs }}'
-          token: ${{ secrets.REPO_ACCESS_TOKEN }}

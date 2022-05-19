@@ -48,7 +48,7 @@ jobs:
         id: to_deploy
 
       - name: terraform plan
-        uses: dflook/terraform-plan@v1.22.2
+        uses: dflook/terraform-plan@v1.25.0
         if: github.event_name == 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
         env:
           TERRAFORM_CLOUD_TOKENS: ${{ github.event.inputs.terraform_cloud_tokens }}
@@ -56,7 +56,7 @@ jobs:
           path: terraform
 
       - name: terraform apply
-        uses: dflook/terraform-apply@v1.22.2
+        uses: dflook/terraform-apply@v1.25.0
         if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
         env:
           TERRAFORM_CLOUD_TOKENS: ${{ github.event.inputs.terraform_cloud_tokens }}

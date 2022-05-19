@@ -1,15 +1,12 @@
 name: Terraform Plan/apply
 on:
   workflow_call:
-    inputs:
-      terraform_cloud_tokens:
-        required: true
-        type: string
     secrets:
       ALL_SECRETS:
         required: true
-      REPO_ACCESS_TOKEN:
-        required: true
+      terraform_cloud_tokens:
+        required: false
+
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
@@ -51,7 +48,7 @@ jobs:
         uses: dflook/terraform-plan@v1.25.0
         if: github.event_name == 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
         env:
-          TERRAFORM_CLOUD_TOKENS: ${{ github.event.inputs.terraform_cloud_tokens }}
+          TERRAFORM_CLOUD_TOKENS: ${{ secrets.terraform_cloud_tokens }}
         with:
           path: terraform
 
@@ -59,6 +56,6 @@ jobs:
         uses: dflook/terraform-apply@v1.25.0
         if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
         env:
-          TERRAFORM_CLOUD_TOKENS: ${{ github.event.inputs.terraform_cloud_tokens }}
+          TERRAFORM_CLOUD_TOKENS: ${{ secrets.terraform_cloud_tokens }}
         with:
           path: terraform

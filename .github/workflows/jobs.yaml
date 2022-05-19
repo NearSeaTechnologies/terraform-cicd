@@ -16,6 +16,8 @@ jobs:
         uses: dflook/terraform-validate@v1.25.0
         with:
           path: terraform
+        env:
+          TERRAFORM_CLOUD_TOKENS: ${{ github.event.inputs.terraform_cloud_tokens }}
 
   fmt-check:
     runs-on: ubuntu-latest
@@ -28,6 +30,8 @@ jobs:
         uses: dflook/terraform-fmt-check@v1.25.0
         with:
           path: terraform
+        env:
+          TERRAFORM_CLOUD_TOKENS: ${{ github.event.inputs.terraform_cloud_tokens }}
   
   docs:
     runs-on: ubuntu-latest

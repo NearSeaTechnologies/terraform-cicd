@@ -91,4 +91,4 @@ jobs:
 
       - name: Terraform Apply
         if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
-        run: terraform apply -chdir=${{ inputs.path }} -auto-approve -input=false
+        run: terraform -chdir=${{ inputs.path }} apply -auto-approve -input=false

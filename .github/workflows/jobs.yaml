@@ -26,13 +26,13 @@ jobs:
           cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
       - name: Terraform Format
         id: fmt
-        run: terraform -chdir=${{ github.event.inputs.message }} fmt -check
+        run: terraform -chdir=${{ github.event.inputs.path }} fmt -check
       - name: Terraform Init
         id: init
-        run: terraform -chdir=${{ github.event.inputs.message }} init
+        run: terraform -chdir=${{ github.event.inputs.path }} init
       - name: Terraform Validate
         id: validate
-        run: terraform -chdir=${{ github.event.inputs.message }} validate -no-color
+        run: terraform -chdir=${{ github.event.inputs.path }} validate -no-color
 
       - name: Update Pull Request
         uses: actions/github-script@v6.1.0

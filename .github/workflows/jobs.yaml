@@ -40,19 +40,19 @@ jobs:
         with:
           identifier: validation
           message: |
-            #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
-            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+            #### Terraform Format and Style 🖌`${{ steps.fmt.outcome }}`
+            #### Terraform Initialization ⚙️`${{ steps.init.outcome }}`
+            #### Terraform Validation 🤖`${{ steps.validate.outcome }}`
 
             <details><summary>Validation Output</summary>
 
-            \`\`\`
+            ```
             ${{ steps.validate.outputs.stdout }}
-            \`\`\`
+            ```
 
             </details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            *Pusher: @${{ github.actor }}, Action: `${{ github.event_name }}`, Working Directory: `${{ env.tf_actions_working_dir }}`, Workflow: `${{ github.workflow }}`*
 
   docs:
     runs-on: ubuntu-latest

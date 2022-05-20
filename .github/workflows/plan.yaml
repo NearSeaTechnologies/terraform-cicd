@@ -56,12 +56,12 @@ jobs:
 
       - name: Terraform Init
         id: init
-        run: terraform -chdir=${{ github.event.inputs.path }} init
+        run: terraform -chdir=${{ inputs.path }} init
 
       - name: Terraform Plan
         id: plan
         if: github.event_name == 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
-        run: terraform -chdir=${{ github.event.inputs.path }} plan -no-color -input=false
+        run: terraform -chdir=${{ inputs.path }} plan -no-color -input=false
         continue-on-error: true
 
       - name: Update Pull Request
@@ -98,4 +98,4 @@ jobs:
 
       - name: Terraform Apply
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: terraform apply -chdir=${{ github.event.inputs.path }} -auto-approve -input=false
+        run: terraform apply -chdir=${{ inputs.path }} -auto-approve -input=false

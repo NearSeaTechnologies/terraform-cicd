@@ -38,6 +38,7 @@ jobs:
         uses: NejcZdovc/comment-pr@v1
         if: github.event_name == 'pull_request'
         with:
+          identifier: validation
           message: |
             #### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
@@ -45,7 +46,7 @@ jobs:
 
             <details><summary>Validation Output</summary>
 
-            \`\`\`\n
+            \`\`\`
             ${{ steps.validate.outputs.stdout }}
             \`\`\`
 
@@ -72,3 +73,4 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           file: "../../terraformDocs.md"
+          identifier: docs

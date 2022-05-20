@@ -67,8 +67,6 @@ jobs:
       - name: Comment docs on PR
         uses: NejcZdovc/comment-pr@v1
         if: github.event_name == 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
-        env:
-          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
         with:
           message: |
             #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
@@ -76,8 +74,10 @@ jobs:
 
             <details><summary>Show Plan</summary>
 
-            \`\`\`\n
-            ${process.env.PLAN}
+            \`\`\`
+            terraform
+
+            ${{ steps.plan.outputs.stdout }}
             \`\`\`
 
             </details>

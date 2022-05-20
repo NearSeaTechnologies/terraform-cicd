@@ -1,6 +1,11 @@
 name: Terraform Plan/apply
 on:
   workflow_call:
+    inputs:
+      path:
+        required: false
+        type: string
+        default: terraform
     secrets:
       ALL_SECRETS:
         required: true
@@ -44,20 +49,53 @@ jobs:
           echo "##[set-output name=has_envs;]$([ -s terraform/.env ] && echo true)"
         id: to_deploy
 
-      - name: terraform plan
-        uses: dflook/terraform-plan@v1.25.0
-        if: github.event_name == 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
-        env:
-          TERRAFORM_CLOUD_TOKENS: ${{ secrets.terraform_cloud_tokens }}
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
         with:
-          path: terraform
-          workspace: ${{ secrets.TF_WORKSPACE }}
+          cli_config_credentials_token: ${{ secrets.terraform_cloud_tokens }}
 
-      - name: terraform apply
-        uses: dflook/terraform-apply@v1.25.0
-        if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
+      - name: Terraform Init
+        id: init
+        run: terraform -chdir=${{ github.event.inputs.message }} init
+
+      - name: Terraform Plan
+        id: plan
+        if: github.event_name == 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
+        run: terraform -chdir=${{ github.event.inputs.message }} plan -no-color -input=false
+        continue-on-error: true
+
+      - name: Update Pull Request
+        uses: actions/github-script@6
+        if: github.event_name == 'pull_request'
         env:
-          TERRAFORM_CLOUD_TOKENS: ${{ secrets.terraform_cloud_tokens }}
+          PLAN: "terraform\n${{ steps.plan.outputs.stdout }}"
         with:
-          path: terraform
-          workspace: ${{ secrets.TF_WORKSPACE }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`\n
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
+      - name: Terraform Plan Status
+        if: steps.plan.outcome == 'failure'
+        run: exit 1
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: terraform apply -chdir=${{ github.event.inputs.message }} -auto-approve -input=false

@@ -1,41 +1,56 @@
 name: CI
 on:
   workflow_call:
+    inputs:
+      path:
+        required: false
+        type: string
+        default: terraform
     secrets:
       terraform_cloud_tokens:
         required: false
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
 jobs:
-  validate:
+  validate-format:
     runs-on: ubuntu-latest
     name: Validate terraform configuration
     steps:
-      - name: Git checkout
-        uses: nschloe/action-cached-lfs-checkout@v1
-
-      - name: terraform validate
-        uses: dflook/terraform-validate@v1.25.0
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
         with:
-          path: terraform
-        env:
-          TERRAFORM_CLOUD_TOKENS: ${{ secrets.terraform_cloud_tokens }}
+          cli_config_credentials_token: ${{ secrets.TF_API_TOKEN }}
+      - name: Terraform Format
+        id: fmt
+        run: terraform -chdir=${{ github.event.inputs.message }} fmt -check
+      - name: Terraform Init
+        id: init
+        run: terraform -chdir=${{ github.event.inputs.message }} init
+      - name: Terraform Validate
+        id: validate
+        run: terraform -chdir=${{ github.event.inputs.message }} validate -no-color
 
-  fmt-check:
-    runs-on: ubuntu-latest
-    name: Check formatting of terraform files
-    steps:
-      - name: Git checkout
-        uses: nschloe/action-cached-lfs-checkout@v1
-
-      - name: terraform fmt
-        uses: dflook/terraform-fmt-check@v1.25.0
+      - name: Update Pull Request
+        uses: actions/github-script@6
+        if: github.event_name == 'pull_request'
         with:
-          path: terraform
-        env:
-          TERRAFORM_CLOUD_TOKENS: ${{ secrets.terraform_cloud_tokens }}
-  
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const output = `#### Terraform Format and Style 🖌\`${{ steps.fmt.outcome }}\`
+            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            #### Terraform Validation 🤖\`${{ steps.validate.outcome }}\`
+
+            *Pushed by: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
   docs:
     runs-on: ubuntu-latest
     steps:

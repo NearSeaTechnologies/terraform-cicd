@@ -90,5 +90,5 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
         run: terraform apply -chdir=${{ inputs.path }} -auto-approve -input=false

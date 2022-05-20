@@ -83,19 +83,21 @@ jobs:
             })
 
             // 2. Prepare format of the comment
-            #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
+            const outputText = `
+              #### Terraform Initialization ⚙️\`${{ steps.init.outcome }}\`
 
-            #### Terraform Plan \`${{ steps.plan.outcome }}\`
+              #### Terraform Plan 📖\`${{ steps.plan.outcome }}\`
 
-            <details><summary>Show Plan</summary>
+              <details><summary>Show Plan</summary>
 
-            \`\`\`\n
-            ${process.env.PLAN}
-            \`\`\`
+              \`\`\`\n
+              ${process.env.PLAN}
+              \`\`\`
 
-            </details>
+              </details>
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+              *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`, Working Directory: \`${{ env.tf_actions_working_dir }}\`, Workflow: \`${{ github.workflow }}\`*`;
+            `
 
             // 3. If we have a comment, update it, otherwise create a new one
             if (botComment) {
@@ -103,14 +105,14 @@ jobs:
                 owner: context.repo.owner,
                 repo: context.repo.repo,
                 comment_id: botComment.id,
-                body: output
+                body: outputText
               })
             } else {
               github.rest.issues.createComment({
                 issue_number: context.issue.number,
                 owner: context.repo.owner,
                 repo: context.repo.repo,
-                body: output
+                body: outputText
               })
             }
 

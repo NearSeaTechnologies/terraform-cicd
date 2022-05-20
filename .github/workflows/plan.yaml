@@ -5,7 +5,7 @@ on:
       path:
         required: false
         type: string
-        default: 'terraform'
+        default: "terraform"
     secrets:
       ALL_SECRETS:
         required: true

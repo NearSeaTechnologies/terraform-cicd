@@ -1,34 +1,59 @@
-name: CI
+name: Terraform validation
 on:
   workflow_call:
+    inputs:
+      path:
+        required: false
+        type: string
+        default: "terraform"
+    secrets:
+      terraform_cloud_tokens:
+        required: false
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
 jobs:
-  validate:
+  validate-format:
     runs-on: ubuntu-latest
     name: Validate terraform configuration
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
-
-      - name: terraform validate
-        uses: dflook/terraform-validate@v1.22.2
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1
         with:
-          path: terraform
+          cli_config_credentials_token: ${{ secrets.terraform_cloud_tokens }}
+      - name: Terraform Format
+        id: fmt
+        run: terraform -chdir=${{ inputs.path }} fmt -check
+      - name: Terraform Init
+        id: init
+        run: terraform -chdir=${{ inputs.path }} init
+      - name: Terraform Validate
+        id: validate
+        run: terraform -chdir=${{ inputs.path }} validate -no-color
 
-  fmt-check:
-    runs-on: ubuntu-latest
-    name: Check formatting of terraform files
-    steps:
-      - name: Git checkout
-        uses: nschloe/action-cached-lfs-checkout@v1
-
-      - name: terraform fmt
-        uses: dflook/terraform-fmt-check@v1.22.2
+      - name: Comment docs on PR
+        uses: NejcZdovc/comment-pr@v1
+        if: github.event_name == 'pull_request'
         with:
-          path: terraform
-  
+          identifier: validation
+          message: |
+            #### Terraform Format and Style 🖌`${{ steps.fmt.outcome }}`
+            #### Terraform Initialization ⚙️`${{ steps.init.outcome }}`
+            #### Terraform Validation 🤖`${{ steps.validate.outcome }}`
+
+            <details><summary>Validation Output</summary>
+
+            ```
+            ${{ steps.validate.outputs.stdout }}
+            ```
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Action: `${{ github.event_name }}`, Working Directory: `${{ env.tf_actions_working_dir }}`, Workflow: `${{ github.workflow }}`*
+
   docs:
     runs-on: ubuntu-latest
     steps:
@@ -48,3 +73,4 @@ jobs:
         if: github.event_name == 'pull_request'
         with:
           file: "../../terraformDocs.md"
+          identifier: docs

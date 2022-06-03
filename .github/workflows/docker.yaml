@@ -38,9 +38,15 @@ jobs:
         with:
           string: ${{ github.repository }}
 
+      - name: Get composite
+        uses: actions/checkout@v3
+        with:
+          repository: ${{ github.repository_owner }}/terraform-cicd
+          path: .github/reuse
+
       - name: To deploy
         id: to_deploy
-        uses: ./.github/workflows/should-deploy
+        uses: .github/reuse/.github/workflows/should-deploy
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
         uses: docker/build-push-action@v2

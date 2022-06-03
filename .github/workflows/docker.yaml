@@ -9,6 +9,8 @@ on:
     secrets:
       ALL_SECRETS:
         required: true
+      PERSONAL_GITHUB_TOKEN:
+        required: true
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

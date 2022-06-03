@@ -1,5 +1,15 @@
 name: Docker
-on: [push, pull_request]
+on:
+  workflow_call:
+    inputs:
+      path:
+        required: false
+        type: string
+        default: "."
+    secrets:
+      ALL_SECRETS:
+        required: true
+
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   cache_tag: buildcache
@@ -34,7 +44,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           # relative path to the place where source code with Dockerfile is located
-          context: .
+          context: inputs.path
           # Note: tags has to be all lower-case
           tags: |
             ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}

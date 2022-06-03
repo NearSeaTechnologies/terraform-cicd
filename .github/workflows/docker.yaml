@@ -40,7 +40,7 @@ jobs:
 
       - name: To deploy
         id: to_deploy
-        uses: ${{ github.repository_owner }}/terraform-cicd/should-deploy@feature/docker-pipeline
+        uses: NearSeaTechnologies/terraform-cicd/should-deploy@feature/docker-pipeline
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
         uses: docker/build-push-action@v2

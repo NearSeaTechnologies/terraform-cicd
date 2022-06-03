@@ -31,7 +31,7 @@ jobs:
 
       - name: To deploy
         id: to_deploy
-        uses: .github/reuse/.github/workflows/should-deploy
+        uses: ./.github/reuse/.github/workflows/should-deploy
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1

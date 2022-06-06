@@ -23,31 +23,11 @@ jobs:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
 
-      - name: Get env name
-        shell: bash
-        run: echo "##[set-output name=env_name;]$(echo ${GITHUB_BASE_REF:-$GITHUB_REF_NAME} | grep -o '^[^/]*' | tr a-z A-Z)"
-        id: extract_env_name
-
-      - name: Create .env and .env.output.envs
-        uses: shine1594/secrets-to-env-action@v1.5.2
-        with:
-          secrets: ${{ secrets.ALL_SECRETS }}
-          secrets_env: all
-          # Get all secrets as .env
-          prefix_prod: _${{ steps.extract_env_name.outputs.env_name }}_
-          file_name_prod: terraform/.env
-
-      - name: Load .env
-        shell: bash
-        run: |
-          # Inject all secrets as envs (for this env)
-          (cat terraform/.env) >> $GITHUB_ENV
-
       - name: To deploy
-        shell: bash
-        run: |
-          echo "##[set-output name=has_envs;]$([ -s terraform/.env ] && echo true)"
         id: to_deploy
+        uses: NearSeaTechnologies/workflows/should-deploy@1.3.0
+        with:
+          ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
@@ -60,13 +40,13 @@ jobs:
 
       - name: Terraform Plan
         id: plan
-        if: github.event_name == 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
+        if: github.event_name == 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true'
         run: terraform -chdir=${{ inputs.path }} plan -no-color -input=false
         continue-on-error: true
 
       - name: Comment docs on PR
         uses: NejcZdovc/comment-pr@v1
-        if: github.event_name == 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
+        if: github.event_name == 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true'
         with:
           identifier: plan
           message: |
@@ -90,5 +70,5 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        if: github.event_name != 'pull_request' && steps.to_deploy.outputs.has_envs == 'true'
+        if: github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true'
         run: terraform -chdir=${{ inputs.path }} apply -auto-approve -input=false

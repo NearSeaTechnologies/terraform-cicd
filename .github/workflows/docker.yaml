@@ -42,7 +42,7 @@ jobs:
         id: to_deploy
         uses: NearSeaTechnologies/terraform-cicd/should-deploy@feature/docker-pipeline
         with:
-          ALL_SECRETS: secrets.ALL_SECRETS
+          ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
         uses: docker/build-push-action@v2

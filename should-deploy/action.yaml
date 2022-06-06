@@ -9,7 +9,7 @@ inputs:
     description: 'If the environment variables should be injects (without the prefix)'
     required: false
     default: 'false'
-  ALL_SECRETS:
+  SECRETS:
     description: 'All the secrets to filter'
     required: true
 outputs:
@@ -31,7 +31,7 @@ runs:
     - name: Create .env and .env.output.envs
       uses: shine1594/secrets-to-env-action@v1.5.2
       with:
-        secrets: ${{ inputs.ALL_SECRETS }}
+        secrets: ${{ inputs.SECRETS }}
         secrets_env: all
         # Get all secrets as .env
         prefix_prod: _${{ steps.extract_env_name.outputs.env_name }}_

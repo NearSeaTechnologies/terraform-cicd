@@ -53,7 +53,7 @@ jobs:
           tags: |
             ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}
             ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:latest
-          push: steps.to_deploy.outputs.should_deploy == 'true'
+          push: ${{ steps.to_deploy.outputs.should_deploy == 'true' }}
           cache-from: type=registry,ref=ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }}
           cache-to: type=registry,ref=ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }},mode=max
 

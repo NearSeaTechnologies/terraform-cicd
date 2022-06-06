@@ -32,6 +32,8 @@ jobs:
       - name: To deploy
         id: to_deploy
         uses: ./.github/reuse/.github/workflows/should-deploy
+        with:
+          ALL_SECRETS: secrets.ALL_SECRETS
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1

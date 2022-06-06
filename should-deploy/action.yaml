@@ -32,7 +32,7 @@ runs:
       uses: shine1594/secrets-to-env-action@v1.5.2
       with:
         secrets: ${{ inputs.ALL_SECRETS }}
-        secrets_env: all
+        secrets_env: production
         # Get all secrets as .env
         prefix_prod: _${{ steps.extract_env_name.outputs.env_name }}_
         file_name_prod: .temp.env

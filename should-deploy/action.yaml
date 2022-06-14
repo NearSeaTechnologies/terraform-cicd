@@ -13,9 +13,8 @@ inputs:
     description: 'All the secrets to filter'
     required: true
   OTHER_ENVS:
-    required: false
+    required: true
     description: 'Other env vars to inject'
-    default: '{}'
 outputs:
   should_deploy:
     description: "If there should be a deploy for this branch"

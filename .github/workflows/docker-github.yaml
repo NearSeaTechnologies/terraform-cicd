@@ -18,7 +18,9 @@ on:
       PERSONAL_GITHUB_TOKEN:
         required: true
     outputs:
-      docker_tag: ${{ steps.tag_output.outputs.tag }}
+      firstword:
+        description: "The docker tag that was pushed"
+        value: ${{ jobs.build.outputs.docker_tag }}
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -29,6 +31,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      docker_tag: ${{ steps.tag_output.outputs.tag }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1

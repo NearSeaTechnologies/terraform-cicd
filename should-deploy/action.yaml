@@ -32,10 +32,21 @@ runs:
       run: echo "##[set-output name=env_name;]$(echo ${GITHUB_BASE_REF:-$GITHUB_REF_NAME} | grep -o '^[^/]*' | tr a-z A-Z)"
       id: extract_env_name
 
-    - uses: Firenza/secrets-to-env@v1.1.0
+    - name: Create .env and .env.output.envs
+      uses: shine1594/secrets-to-env-action@v1.5.2
       with:
-          secrets: ${{ inputs.ALL_SECRETS }}
-          secret_filter_regex: _${{ steps.extract_env_name.outputs.env_name }}_*
+        secrets: ${{ inputs.ALL_SECRETS }}
+        secrets_env: production
+        # Get all secrets as .env
+        prefix_prod: _${{ steps.extract_env_name.outputs.env_name }}_
+        file_name_prod: .temp.env
+
+    - name: Load .env
+      shell: bash
+      if: inputs.inject_envs == 'true'
+      run: |
+        # Inject all secrets as envs (for this env)
+        (cat .temp.env) >> $GITHUB_ENV
 
     - uses: Firenza/secrets-to-env@v1.1.0
       with:

@@ -40,7 +40,6 @@ runs:
     - uses: Firenza/secrets-to-env@v1.1.0
       with:
           secrets: ${{ inputs.OTHER_ENVS }}
-          secret_filter_regex: '*'
 
     - name: To deploy
       shell: bash

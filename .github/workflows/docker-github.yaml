@@ -25,8 +25,7 @@ on:
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   cache_tag: buildcache
-  tag_prefix: ghcr.io/${{ steps.repo_lower.outputs.lowercase }}
-  tag: ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}
+  tag_host: ghcr.io
 
 jobs:
   build:
@@ -66,14 +65,14 @@ jobs:
           context: ${{ inputs.path }}
           # Note: tags has to be all lower-case
           tags: |
-            ${{ env.tag }}
-            ${{ env.tag_prefix }}:latest
+            ${{ env.tag_host }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}
+            ${{ env.tag_host }}/${{ steps.repo_lower.outputs.lowercase }}:latest
           push: ${{ github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true' }}
           cache-from: type=registry,ref=ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }}
           cache-to: type=registry,ref=ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }},mode=max
 
       - id: tag_output
-        run: echo "::set-output name=tag::${{ env.tag }}"
+        run: echo "::set-output name=tag::${{ env.tag_host }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}"
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1

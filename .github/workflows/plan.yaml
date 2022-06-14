@@ -27,7 +27,7 @@ jobs:
 
       - name: To deploy
         id: to_deploy
-        uses: NearSeaTechnologies/workflows/should-deploy@1.3.0
+        uses: NearSeaTechnologies/workflows/should-deploy@feature/docker-pipeline
         with:
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}

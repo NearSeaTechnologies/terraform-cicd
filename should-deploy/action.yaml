@@ -12,6 +12,10 @@ inputs:
   ALL_SECRETS:
     description: 'All the secrets to filter'
     required: true
+  OTHER_ENVS:
+    required: false
+    description: 'Other env vars to inject'
+    default: '{}'
 outputs:
   should_deploy:
     description: "If there should be a deploy for this branch"
@@ -28,21 +32,15 @@ runs:
       run: echo "##[set-output name=env_name;]$(echo ${GITHUB_BASE_REF:-$GITHUB_REF_NAME} | grep -o '^[^/]*' | tr a-z A-Z)"
       id: extract_env_name
 
-    - name: Create .env and .env.output.envs
-      uses: shine1594/secrets-to-env-action@v1.5.2
+    - uses: Firenza/secrets-to-env@v1.1.0
       with:
-        secrets: ${{ inputs.ALL_SECRETS }}
-        secrets_env: production
-        # Get all secrets as .env
-        prefix_prod: _${{ steps.extract_env_name.outputs.env_name }}_
-        file_name_prod: .temp.env
+          secrets: ${{ inputs.ALL_SECRETS }}
+          secret_filter_regex: _${{ steps.extract_env_name.outputs.env_name }}_*
 
-    - name: Load .env
-      shell: bash
-      if: inputs.inject_envs == 'true'
-      run: |
-        # Inject all secrets as envs (for this env)
-        (cat .temp.env) >> $GITHUB_ENV
+    - uses: Firenza/secrets-to-env@v1.1.0
+      with:
+          secrets: ${{ inputs.OTHER_ENVS }}
+          secret_filter_regex: '*'
 
     - name: To deploy
       shell: bash

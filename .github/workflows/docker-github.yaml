@@ -7,6 +7,7 @@ on:
         type: string
         default: "."
       keep_last:
+        description: "Number of docker tags to keep on the container registry"
         required: false
         type: string
         default: "10"
@@ -14,11 +15,11 @@ on:
       ALL_SECRETS:
         required: true
       OTHER_ENVS:
-        required: true
+        required: false
       PERSONAL_GITHUB_TOKEN:
         required: true
     outputs:
-      firstword:
+      docker_tag:
         description: "The docker tag that was pushed"
         value: ${{ jobs.build.outputs.docker_tag }}
 

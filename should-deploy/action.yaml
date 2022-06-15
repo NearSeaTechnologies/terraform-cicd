@@ -5,8 +5,12 @@ description: |
   That's stored on the output should_deploy.
   It also injects the secrets into the GITHUB_ENV, if the input is true
 inputs:
-  inject_envs:
-    description: 'If the environment variables should be injects (without the prefix)'
+  inject_secrets:
+    description: 'If the environment variables on ALL_SECRETS should be injected (filtered and without the prefix)'
+    required: false
+    default: 'false'
+  inject_other_envs:
+    description: 'If the environment variables on OTHER_ENVS should be injected'
     required: false
     default: 'false'
   ALL_SECRETS:
@@ -42,12 +46,13 @@ runs:
 
     - name: Load .env
       shell: bash
-      if: inputs.inject_envs == 'true'
+      if: inputs.inject_secrets == 'true'
       run: |
         # Inject all secrets as envs (for this env)
         (cat .temp.env) >> $GITHUB_ENV
 
     - uses: Firenza/secrets-to-env@v1.1.0
+      if: inputs.inject_other_envs == 'true'
       with:
           secrets: ${{ inputs.OTHER_ENVS }}
 

@@ -14,7 +14,7 @@ on:
       ALL_SECRETS:
         required: true
       OTHER_ENVS:
-        required: true
+        required: false
       terraform_cloud_tokens:
         required: false
 

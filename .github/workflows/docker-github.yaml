@@ -11,12 +11,23 @@ on:
         required: false
         type: string
         default: "10"
+      registry:
+        description: "Registry host"
+        required: false
+        type: string
+        default: "ghcr.io"
     secrets:
       ALL_SECRETS:
         required: true
       OTHER_ENVS:
         required: false
       PERSONAL_GITHUB_TOKEN:
+        required: true
+      username:
+        description: "Registry username"
+        required: true
+      password:
+        description: "Registry password"
         required: true
     outputs:
       docker_tag:
@@ -26,7 +37,6 @@ on:
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
   cache_tag: buildcache
-  tag_host: ghcr.io
 
 jobs:
   build:
@@ -43,9 +53,9 @@ jobs:
       - name: Login to Github Packages
         uses: docker/login-action@v1
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+          registry: ${{ inputs.registry }}
+          username: ${{ inputs.username }}
+          password: ${{ inputs.password }}
 
       - id: repo_lower
         uses: ASzc/change-string-case-action@v1
@@ -66,14 +76,14 @@ jobs:
           context: ${{ inputs.path }}
           # Note: tags has to be all lower-case
           tags: |
-            ${{ env.tag_host }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}
-            ${{ env.tag_host }}/${{ steps.repo_lower.outputs.lowercase }}:latest
+            ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}
+            ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:latest
           push: ${{ github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true' }}
-          cache-from: type=registry,ref=ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }}
-          cache-to: type=registry,ref=ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }},mode=max
+          cache-from: type=registry,ref=${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }}
+          cache-to: type=registry,ref=${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }},mode=max
 
       - id: tag_output
-        run: echo "::set-output name=tag::${{ env.tag_host }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}"
+        run: echo "::set-output name=tag::${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}"
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1

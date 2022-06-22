@@ -6,9 +6,15 @@ on:
         required: false
         type: string
         default: "terraform"
+      inject_other_envs:
+        required: false
+        type: boolean
+        default: false
     secrets:
       ALL_SECRETS:
         required: true
+      OTHER_ENVS:
+        required: false
       terraform_cloud_tokens:
         required: false
 
@@ -25,9 +31,12 @@ jobs:
 
       - name: To deploy
         id: to_deploy
-        uses: NearSeaTechnologies/workflows/should-deploy@1.3.0
+        uses: NearSeaTechnologies/workflows/should-deploy@feature/docker-pipeline
         with:
+          inject_secrets: true
+          inject_other_envs: ${{ inputs.inject_other_envs }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
+          OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1

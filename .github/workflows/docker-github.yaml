@@ -6,11 +6,33 @@ on:
         required: false
         type: string
         default: "."
+      keep_last:
+        description: "Number of docker tags to keep on the container registry"
+        required: false
+        type: string
+        default: "10"
+      registry:
+        description: "Registry host"
+        required: false
+        type: string
+        default: "ghcr.io"
     secrets:
       ALL_SECRETS:
         required: true
+      OTHER_ENVS:
+        required: false
       PERSONAL_GITHUB_TOKEN:
         required: true
+      username:
+        description: "Registry username"
+        required: true
+      password:
+        description: "Registry password"
+        required: true
+    outputs:
+      docker_tag:
+        description: "The docker tag that was pushed"
+        value: ${{ jobs.build.outputs.docker_tag }}
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -19,6 +41,8 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      docker_tag: ${{ steps.tag_output.outputs.tag }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
@@ -29,9 +53,9 @@ jobs:
       - name: Login to Github Packages
         uses: docker/login-action@v1
         with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+          registry: ${{ inputs.registry }}
+          username: ${{ secrets.username }}
+          password: ${{ secrets.password }}
 
       - id: repo_lower
         uses: ASzc/change-string-case-action@v1
@@ -40,9 +64,10 @@ jobs:
 
       - name: To deploy
         id: to_deploy
-        uses: NearSeaTechnologies/workflows/should-deploy@1.3.0
+        uses: NearSeaTechnologies/workflows/should-deploy@feature/docker-pipeline
         with:
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
+          OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
       - name: Build image and push to Docker Hub and GitHub Container Registry
         uses: docker/build-push-action@v2
@@ -51,11 +76,14 @@ jobs:
           context: ${{ inputs.path }}
           # Note: tags has to be all lower-case
           tags: |
-            ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}
-            ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:latest
+            ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}
+            ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:latest
           push: ${{ github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true' }}
-          cache-from: type=registry,ref=ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }}
-          cache-to: type=registry,ref=ghcr.io/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }},mode=max
+          cache-from: type=registry,ref=${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }}
+          cache-to: type=registry,ref=${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }},mode=max
+
+      - id: tag_output
+        run: echo "::set-output name=tag::${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}"
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1
@@ -63,6 +91,6 @@ jobs:
           token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
           organization: ${{ github.repository_owner }}
           container: ${{ github.event.repository.name }}
-          keep-last: 10
+          keep-last: ${{ inputs.keep_last }}
           tag-regex-exclude: \b(?:latest|${{ env.cache_tag }})\b
           untagged: true

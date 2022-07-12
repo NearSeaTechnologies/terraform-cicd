@@ -45,7 +45,6 @@ jobs:
 
       - name: Terraform Init
         id: init
-        timeout-minutes: 5
         run: terraform -chdir=${{ inputs.path }} init -input=false
 
       - name: Terraform Plan

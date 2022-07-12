@@ -29,7 +29,6 @@ jobs:
         run: terraform -chdir=${{ inputs.path }} fmt -check
       - name: Terraform Init
         id: init
-        timeout-minutes: 5
         run: terraform -chdir=${{ inputs.path }} init -input=false
       - name: Terraform Validate
         id: validate

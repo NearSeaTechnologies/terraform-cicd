@@ -6,9 +6,6 @@ on:
         required: false
         type: string
         default: "terraform"
-    secrets:
-      terraform_cloud_tokens:
-        required: false
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -22,11 +19,12 @@ jobs:
         uses: nschloe/action-cached-lfs-checkout@v1
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
-        with:
-          cli_config_credentials_token: ${{ secrets.terraform_cloud_tokens }}
       - name: Terraform Format
         id: fmt
         run: terraform -chdir=${{ inputs.path }} fmt -check
+      - name: Terraform Init
+        id: init
+        run: terraform -chdir=${{ inputs.path }} init -input=false -backend=false
       - name: Terraform Validate
         id: validate
         run: terraform -chdir=${{ inputs.path }} validate -no-color
@@ -38,6 +36,7 @@ jobs:
           identifier: validation
           message: |
             #### Terraform Format and Style 🖌`${{ steps.fmt.outcome }}`
+            #### Terraform Initialization ⚙️`${{ steps.init.outcome }}`
             #### Terraform Validation 🤖`${{ steps.validate.outcome }}`
 
             <details><summary>Validation Output</summary>

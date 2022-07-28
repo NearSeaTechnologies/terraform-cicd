@@ -64,7 +64,7 @@ jobs:
 
       - name: Create TF Docs Pull Request
         uses: peter-evans/create-pull-request@v4.0.4
-        if: ${{ github.event_name != 'pull_request' && github.ref_protected == 'true' }}
+        if: ${{ github.event_name != 'pull_request' && github.ref_protected }}
         with:
           delete-branch: true
           branch: ${{ github.ref }}/tf-docs

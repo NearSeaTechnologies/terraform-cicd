@@ -64,6 +64,7 @@ jobs:
           git-push: ${{ github.event_name != 'pull_request' && github.github.ref_protected != 'true' }}
           git-push-user-name: ${{ github.actor }}
           git-push-user-email: ${{github.event.pusher.email}}
+          git-commit-message: "Do not skip ci"
 
       - name: Comment docs on PR
         uses: NejcZdovc/comment-pr@v1

@@ -70,11 +70,10 @@ jobs:
       - name: Create TF Docs Pull Request
         id: tf_docs_pr
         uses: peter-evans/create-pull-request@v4.0.4
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
         with:
           delete-branch: true
           branch: chore/update-tf-docs
-          branch-suffix: short-commit-hash
           labels: tfdocs
           base: ${{ github.ref_name }}
           title: Update Terraform docs

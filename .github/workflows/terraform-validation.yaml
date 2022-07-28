@@ -67,9 +67,9 @@ jobs:
         if: github.event_name != 'pull_request' && github.ref_name == 'feature/docs-commit-before-merge'
         with:
           delete-branch: true
-          branch: ${{ github.ref }}/tf-docs
+          branch: ${{ github.ref_name }}/tf-docs
           labels: tfdocs
-          base: ${{ github.ref }}
+          base: ${{ github.ref_name }}
           title: Update Terraform docs
 
       - name: Auto merge TF Docs

@@ -65,7 +65,7 @@ jobs:
       - name: Create TF Docs Pull Request
         id: tf_docs_pr
         uses: peter-evans/create-pull-request@v4.0.4
-        if: github.event_name != 'pull_request' && github.ref_name == 'feature/docs-commit-before-merge'
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
         with:
           delete-branch: true
           branch: chore/update-tf-docs
@@ -73,12 +73,6 @@ jobs:
           labels: tfdocs
           base: ${{ github.ref_name }}
           title: Update Terraform docs
-
-      - name: Auto merge TF Docs
-        uses: pascalgn/automerge-action@v0.15.3
-        if: steps.tf_docs_pr.conclusion == 'success'
-        env:
-          PULL_REQUEST: "${{ steps.tf_docs_pr.outputs.pull-request-number }}"
 
       - name: Comment docs on PR
         uses: NejcZdovc/comment-pr@v1

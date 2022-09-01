@@ -19,6 +19,8 @@ on:
       filter_files:
         required: false
         type: string
+        default: |
+          - "**"
         description: |
           Run only if certain files changed. Syntax is a yaml list:
           ```

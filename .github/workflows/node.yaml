@@ -1,0 +1,100 @@
+name: Node lint+tests
+on:
+  workflow_call:
+    inputs:
+      node_cache:
+        required: false
+        type: string
+        default: "npm"
+      node_install:
+        required: false
+        type: string
+        default: "npm ci"
+      node_version:
+        required: false
+        type: string
+        default: "16.13.0"
+      jest_reporter:
+        required: false
+        type: string
+        default: "jest-junit"
+      jest_reporter_path:
+        required: false
+        type: string
+        default: "./reports/junit.xml"
+      filter_files:
+        required: false
+        type: string
+        default: |
+          - 'src/**'
+          - 'package*.json'
+          - '.eslintrc.js'
+          - 'tsconfig*.json'
+        description: |
+          Run only if certain files changed. Syntax is a yaml list:
+          ```
+          - common/**
+          - config/**
+          ```
+
+env:
+  GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+jobs:
+  node-changes:
+    runs-on: ubuntu-latest
+    outputs:
+      terraform: ${{ steps.filter.outputs.node }}
+    steps:
+      - name: Git checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
+      - uses: dorny/paths-filter@v2.10.2
+        id: filter
+        with:
+          filters: |
+            node:
+            ${{ input.filter_files }}
+
+  prettier:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ input.node_version }}
+          cache: ${{ input.node_cache }}
+      - run: ${{ input.node_install }}
+      - name: Run linters
+        uses: wearerequired/lint-action@v1
+        with:
+          eslint: true
+          eslint_extensions: ts
+          prettier: true
+          prettier_extensions: ts
+          auto_fix: false
+          continue_on_error: false
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Git checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
+      - uses: actions/setup-node@v2
+        with:
+          node-version: ${{ input.node_version }}
+          cache: ${{ input.node_cache }}
+      - run: ${{ input.node_install }}
+      - name: Jest Annotations & Coverage
+        uses: mattallty/jest-github-action@v1.0.3
+      - name: Test Reporter
+        uses: dorny/test-reporter@v1.5.0
+        if: success() || failure()
+        with:
+          name: JEST Tests
+          reporter: ${{ input.jest_reporter }}
+          path: ${{ input.jest_reporter_path }}
+          fail-on-error: true
+          list-suites: all
+          list-tests: all
+          max-annotations: 50

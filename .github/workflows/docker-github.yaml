@@ -61,7 +61,7 @@ jobs:
         with:
           filters: |
             docker:
-            ${{ input.filter_files }}
+            ${{ inputs.filter_files }}
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2

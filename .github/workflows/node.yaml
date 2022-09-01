@@ -53,7 +53,7 @@ jobs:
         with:
           filters: |
             node:
-            ${{ input.filter_files }}
+            ${{ inputs.filter_files }}
 
   prettier:
     runs-on: ubuntu-latest
@@ -62,9 +62,9 @@ jobs:
         uses: nschloe/action-cached-lfs-checkout@v1
       - uses: actions/setup-node@v2
         with:
-          node-version: ${{ input.node_version }}
-          cache: ${{ input.node_cache }}
-      - run: ${{ input.node_install }}
+          node-version: ${{ inputs.node_version }}
+          cache: ${{ inputs.node_cache }}
+      - run: ${{ inputs.node_install }}
       - name: Run linters
         uses: wearerequired/lint-action@v1
         with:
@@ -82,9 +82,9 @@ jobs:
         uses: nschloe/action-cached-lfs-checkout@v1
       - uses: actions/setup-node@v2
         with:
-          node-version: ${{ input.node_version }}
-          cache: ${{ input.node_cache }}
-      - run: ${{ input.node_install }}
+          node-version: ${{ inputs.node_version }}
+          cache: ${{ inputs.node_cache }}
+      - run: ${{ inputs.node_install }}
       - name: Jest Annotations & Coverage
         uses: mattallty/jest-github-action@v1.0.3
       - name: Test Reporter
@@ -92,8 +92,8 @@ jobs:
         if: success() || failure()
         with:
           name: JEST Tests
-          reporter: ${{ input.jest_reporter }}
-          path: ${{ input.jest_reporter_path }}
+          reporter: ${{ inputs.jest_reporter }}
+          path: ${{ inputs.jest_reporter_path }}
           fail-on-error: true
           list-suites: all
           list-tests: all

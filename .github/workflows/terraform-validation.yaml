@@ -23,9 +23,10 @@ jobs:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@v2.10.2
         id: filter
         with:
+          base: ${{ github.ref }}
           filters: |
             terraform:
               - '${{ inputs.path }}/**'
@@ -72,9 +73,10 @@ jobs:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
 
-      - uses: dorny/paths-filter@v2
+      - uses: dorny/paths-filter@v2.10.2
         id: filter
         with:
+          base: ${{ github.ref }}
           filters: |
             terraform:
               - '${{ inputs.path }}/**'

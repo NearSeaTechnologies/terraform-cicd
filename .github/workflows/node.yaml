@@ -22,6 +22,14 @@ on:
         required: false
         type: string
         default: "./reports/junit.xml"
+      run_prettier:
+        required: false
+        type: boolean
+        default: true
+      run_tests:
+        required: false
+        type: boolean
+        default: true
       filter_files:
         required: false
         type: string
@@ -59,7 +67,7 @@ jobs:
   prettier:
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ needs.changes.outputs.node == 'true' }}
+    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_prettier == 'true' }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
@@ -81,7 +89,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ needs.changes.outputs.node == 'true' }}
+    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_tests == 'true' }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1

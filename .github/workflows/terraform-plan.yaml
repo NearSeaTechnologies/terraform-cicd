@@ -6,6 +6,17 @@ on:
         required: false
         type: string
         default: "terraform"
+      filter_files:
+        required: false
+        type: string
+        default: |
+          - "**"
+        description: |
+          Run only if certain files changed. Syntax is a yaml list:
+          ```
+          - common/**
+          - config/**
+          ```
       inject_other_envs:
         required: false
         type: boolean
@@ -35,7 +46,7 @@ jobs:
           base: ${{ github.ref }}
           filters: |
             terraform:
-              - '${{ inputs.path }}/**'
+            ${{ inputs.filter_files }}
 
       - name: To deploy
         id: to_deploy

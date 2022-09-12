@@ -16,6 +16,11 @@ on:
         required: false
         type: string
         default: "ghcr.io"
+      exclude_prune:
+        description: "Tags to exclude, on the prune"
+        required: false
+        type: string
+        default: "DEVELOP|RELEASE|MASTER"
       filter_files:
         required: false
         type: string
@@ -102,6 +107,7 @@ jobs:
           tags: |
             ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}
             ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:latest
+            ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ steps.to_deploy.outputs.env_name }}
           push: ${{ github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true' }}
           cache-from: type=registry,ref=${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }}
           cache-to: type=registry,ref=${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }},mode=max
@@ -118,5 +124,5 @@ jobs:
           organization: ${{ github.repository_owner }}
           container: ${{ github.event.repository.name }}
           keep-last: ${{ inputs.keep_last }}
-          tag-regex-exclude: \b(?:latest|${{ env.cache_tag }})\b
+          tag-regex-exclude: \b(?:latest|${{ env.cache_tag }}|${{ inputs.exclude_prune }})\b
           untagged: true

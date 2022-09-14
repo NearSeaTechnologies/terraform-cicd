@@ -68,7 +68,7 @@ jobs:
   prettier:
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_prettier == 'true' }}
+    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_prettier == true }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
@@ -90,7 +90,7 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_tests == 'true' }}
+    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_tests == true }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1

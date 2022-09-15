@@ -63,6 +63,13 @@ jobs:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
 
+      - name: To deploy
+        id: to_deploy
+        uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
+        with:
+          ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
+          OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
+
       - uses: dorny/paths-filter@v2.10.2
         id: filter
         with:
@@ -73,11 +80,11 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
-        if: steps.filter.outputs.docker == 'true'
+        if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
 
       - name: Login to Github Packages
         uses: docker/login-action@v1
-        if: steps.filter.outputs.docker == 'true'
+        if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
         with:
           registry: ${{ inputs.registry }}
           username: ${{ secrets.username }}
@@ -85,21 +92,13 @@ jobs:
 
       - id: repo_lower
         uses: ASzc/change-string-case-action@v1
-        if: steps.filter.outputs.docker == 'true'
+        if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
         with:
           string: ${{ github.repository }}
 
-      - name: To deploy
-        id: to_deploy
-        uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
-        if: steps.filter.outputs.docker == 'true'
-        with:
-          ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
-          OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
-
       - name: Build image and push to Docker Hub and GitHub Container Registry
         uses: docker/build-push-action@v2
-        if: steps.filter.outputs.docker == 'true'
+        if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
         with:
           # relative path to the place where source code with Dockerfile is located
           context: ${{ inputs.path }}
@@ -113,12 +112,12 @@ jobs:
           cache-to: type=registry,ref=${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }},mode=max
 
       - id: tag_output
-        if: steps.filter.outputs.docker == 'true'
+        if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
         run: echo "::set-output name=tag::${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}"
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1
-        if: steps.filter.outputs.docker == 'true'
+        if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
         with:
           token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
           organization: ${{ github.repository_owner }}

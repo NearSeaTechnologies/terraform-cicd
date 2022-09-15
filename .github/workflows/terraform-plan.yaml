@@ -60,7 +60,7 @@ jobs:
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
-        if: steps.filter.outputs.terraform == 'true'
+        if: steps.filter.outputs.terraform == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
         with:
           cli_config_credentials_token: ${{ secrets.terraform_cloud_tokens }}
 

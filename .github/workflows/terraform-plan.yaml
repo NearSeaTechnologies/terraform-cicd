@@ -50,34 +50,26 @@ jobs:
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
-      - uses: dorny/paths-filter@v2.10.2
-        id: filter
-        with:
-          base: ${{ github.ref }}
-          filters: |
-            terraform:
-            ${{ inputs.filter_files }}
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
-        if: steps.filter.outputs.terraform == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+        if: steps.to_deploy.outputs.should_deploy == 'true'
         with:
           cli_config_credentials_token: ${{ secrets.terraform_cloud_tokens }}
 
       - name: Terraform Init
         id: init
-        if:  steps.filter.outputs.terraform == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+        if:  steps.to_deploy.outputs.should_deploy == 'true'
         run: terraform -chdir=${{ inputs.path }} init -input=false
 
       - name: Terraform Plan
         id: plan
-        if:  (steps.filter.outputs.terraform == 'true' || steps.to_deploy.outputs.should_deploy == 'true') && github.event_name == 'pull_request'
+        if:  steps.to_deploy.outputs.should_deploy == 'true' && github.event_name == 'pull_request'
         run: terraform -chdir=${{ inputs.path }} plan -no-color -input=false
         continue-on-error: true
 
       - name: Comment docs on PR
         uses: NejcZdovc/comment-pr@v1
-        if:  (steps.filter.outputs.terraform == 'true' || steps.to_deploy.outputs.should_deploy == 'true') && github.event_name == 'pull_request'
+        if:  steps.to_deploy.outputs.should_deploy == 'true' && github.event_name == 'pull_request'
         with:
           identifier: plan
           message: |
@@ -101,5 +93,5 @@ jobs:
         run: exit 1
 
       - name: Terraform Apply
-        if: (steps.filter.outputs.terraform == 'true' || steps.to_deploy.outputs.should_deploy == 'true') && github.event_name != 'pull_request'
+        if: steps.to_deploy.outputs.should_deploy == 'true' && github.event_name != 'pull_request'
         run: terraform -chdir=${{ inputs.path }} apply -auto-approve -input=false

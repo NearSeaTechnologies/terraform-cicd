@@ -33,7 +33,7 @@ inputs:
 outputs:
   docker_tag:
     description: "The docker tag that was pushed"
-    value: ${{ jobs.build.outputs.docker_tag }}
+    value: ${{ steps.build.outputs.docker_tag }}
 
 runs:
   using: "composite"
@@ -42,8 +42,8 @@ runs:
       id: to_deploy
       uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
       with:
-        ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
-        OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
+        ALL_SECRETS: ${{ inputs.ALL_SECRETS }}
+        OTHER_ENVS: ${{ inputs.OTHER_ENVS }}
 
     - uses: dorny/paths-filter@v2.10.2
       id: filter

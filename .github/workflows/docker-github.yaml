@@ -125,7 +125,7 @@ jobs:
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1
-        if: input.prune == true && inputs.registry == "ghcr.io" && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        if: inputs.prune == true && inputs.registry == "ghcr.io" && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         with:
           token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
           organization: ${{ github.repository_owner }}
@@ -135,12 +135,12 @@ jobs:
           untagged: true
 
       - name: Install doctl
-        if: input.prune == true && startsWith(inputs.registry, "registry.digitalocean.com") && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        if: inputs.prune == true && startsWith(inputs.registry, "registry.digitalocean.com") && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         uses: digitalocean/action-doctl@v2
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       - name: Remove old images from Container Registry
-        if: input.prune == true && startsWith(inputs.registry, "registry.digitalocean.com") && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        if: inputs.prune == true && startsWith(inputs.registry, "registry.digitalocean.com") && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         uses: ripplr-io/docr-image-remove@v1
         with:
           image_repository: ${{ steps.repo_lower.outputs.lowercase }}

@@ -42,8 +42,9 @@ on:
         required: true
       OTHER_ENVS:
         required: false
-      PERSONAL_GITHUB_TOKEN:
-        required: true
+      DIGITALOCEAN_ACCESS_TOKEN:
+        description: "Digital ocean access token for prune (if DO's container registry is used)"
+        required: false
     outputs:
       docker_tag:
         description: "The docker tag that was pushed"
@@ -57,15 +58,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      docker_tag: ${{ steps.docker.outputs.docker_tag }}
+      docker_tag: ${{ steps.tag_output.outputs.tag }}
     steps:
-      - name: Login to Github Packages
-        uses: docker/login-action@v1
-        if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+      - name: Git checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
+
+      - name: Install doctl 
+        uses: digitalocean/action-doctl@v2
         with:
-          registry: ${{ inputs.registry }}
-          username: ${{ secrets.username }}
-          password: ${{ secrets.password }}
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Log in to DO Container Registry 
+        run: doctl registry login --expiry-seconds 600
 
       - name: Build/push docker image
         id: docker
@@ -74,13 +77,14 @@ jobs:
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
-      - name: GHCR Prune
-        uses: freefair/action-ghcr-prune@v0.4.1
-        if: inputs.prune == true && inputs.registry == 'ghcr.io' && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+      - name: Install doctl
+        if: inputs.prune == true && startsWith(inputs.registry, 'registry.digitalocean.com') && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        uses: digitalocean/action-doctl@v2
         with:
-          token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
-          organization: ${{ github.repository_owner }}
-          container: ${{ github.event.repository.name }}
-          keep-last: ${{ inputs.keep_last }}
-          tag-regex-exclude: \b(?:latest|${{ env.cache_tag }}|${{ inputs.exclude_prune }})\b
-          untagged: true
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: Remove old images from Container Registry
+        if: inputs.prune == true && startsWith(inputs.registry, 'registry.digitalocean.com') && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        uses: ripplr-io/docr-image-remove@v1
+        with:
+          image_repository: ${{ steps.repo_lower.outputs.lowercase }}
+          buffer_size: 10

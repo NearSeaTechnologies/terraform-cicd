@@ -14,14 +14,6 @@ inputs:
     description: "Registry host"
     required: false
     default: "ghcr.io"
-  prune:
-    description: "If it should prune old entries (works for GitHub or DigitalOcean)"
-    required: false
-    default: 'true'
-  exclude_prune:
-    description: "Tags to exclude, on the prune"
-    required: false
-    default: "DEVELOP|RELEASE|MASTER"
   filter_files:
     required: false
     default: |

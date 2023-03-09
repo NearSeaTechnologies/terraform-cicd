@@ -38,6 +38,12 @@ on:
           - config/**
           ```
     secrets:
+      username:
+        description: "Registry username"
+        required: true
+      password:
+        description: "Registry password"
+        required: true
       ALL_SECRETS:
         required: true
       OTHER_ENVS:
@@ -71,12 +77,16 @@ jobs:
         id: docker
         uses: NearSeaTechnologies/workflows/docker@1.7.6rc4
         with:
+          path: ${{ inputs.path }}
+          keep_last: ${{ inputs.keep_last }}
+          registry: ${{ inputs.registry }}
+          filter_files: ${{ inputs.filter_files }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1
-        if: inputs.prune == true && inputs.registry == 'ghcr.io' && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        if: inputs.prune == true && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         with:
           token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
           organization: ${{ github.repository_owner }}

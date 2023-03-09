@@ -15,7 +15,7 @@ on:
         description: "Registry host"
         required: false
         type: string
-        default: "ghcr.io"
+        default: "registry.digitalocean.com"
       prune:
         description: "If it should prune old entries (works for GitHub or DigitalOcean)"
         required: false
@@ -74,6 +74,10 @@ jobs:
         id: docker
         uses: NearSeaTechnologies/workflows/docker@1.7.6rc4
         with:
+          path: ${{ inputs.path }}
+          keep_last: ${{ inputs.keep_last }}
+          registry: ${{ inputs.registry }}
+          filter_files: ${{ inputs.filter_files }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
@@ -83,7 +87,7 @@ jobs:
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       - name: Remove old images from Container Registry
-        if: inputs.prune == true && startsWith(inputs.registry, 'registry.digitalocean.com') && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        if: inputs.prune == true && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         uses: ripplr-io/docr-image-remove@v1
         with:
           image_repository: ${{ steps.repo_lower.outputs.lowercase }}

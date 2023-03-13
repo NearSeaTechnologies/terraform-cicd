@@ -50,8 +50,6 @@ on:
         required: false
       PERSONAL_GITHUB_TOKEN:
         required: true
-      GITHUB_TOKEN:
-        required: true
     outputs:
       docker_tag:
         description: "The docker tag that was pushed"
@@ -88,6 +86,7 @@ jobs:
           filter_files: ${{ inputs.filter_files }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1

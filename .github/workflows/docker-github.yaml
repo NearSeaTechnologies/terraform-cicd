@@ -50,6 +50,8 @@ on:
         required: false
       PERSONAL_GITHUB_TOKEN:
         required: true
+      GITHUB_TOKEN:
+        required: true
     outputs:
       docker_tag:
         description: "The docker tag that was pushed"

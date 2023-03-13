@@ -30,9 +30,6 @@ inputs:
   OTHER_ENVS:
     description: "Other envs to inject"
     required: false
-  GITHUB_TOKEN:
-    description: Github token
-    required: false
 outputs:
   docker_tag:
     description: "The docker tag that was pushed"
@@ -71,7 +68,6 @@ runs:
       if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
       env:
         cache_tag: buildcache
-        GITHUB_TOKEN: ${{inputs.GITHUB_TOKEN}}
       with:
         # relative path to the place where source code with Dockerfile is located
         context: ${{ inputs.path }}

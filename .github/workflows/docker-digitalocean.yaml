@@ -83,7 +83,7 @@ jobs:
 
       - name: Build/push docker image
         id: docker
-        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc15
+        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc16
         with:
           path: ${{ inputs.path }}
           keep_last: ${{ inputs.keep_last }}

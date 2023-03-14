@@ -57,7 +57,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     outputs:
-      docker_tag: ${{ steps.tag_output.outputs.tag }}
+      docker_tag: ${{ steps.docker.outputs.docker_tag }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
@@ -83,7 +83,7 @@ jobs:
 
       - name: Build/push docker image
         id: docker
-        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc14
+        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc15
         with:
           path: ${{ inputs.path }}
           keep_last: ${{ inputs.keep_last }}

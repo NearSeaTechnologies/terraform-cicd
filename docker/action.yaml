@@ -82,4 +82,4 @@ runs:
     - id: tag_output
       shell: bash
       if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
-      run: echo "::set-output name=tag::${{ inputs.registry_repository }}:${{ github.sha }}"
+      run: echo "tag=${{ inputs.registry_repository }}:${{ github.sha }}" >> $GITHUB_OUTPUT

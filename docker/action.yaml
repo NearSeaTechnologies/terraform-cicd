@@ -7,13 +7,12 @@ inputs:
     required: false
     default: "."
   keep_last:
-    description: "Number of docker tags to keep on the container registry"
+    description: "Number of docker tags to keep on the container registry repository"
     required: false
     default: "10"
-  registry:
-    description: "Registry host"
-    required: false
-    default: "ghcr.io"
+  registry_repository:
+    description: "Registry repository"
+    required: true
   filter_files:
     required: false
     default: |
@@ -73,14 +72,14 @@ runs:
         context: ${{ inputs.path }}
         # Note: tags has to be all lower-case
         tags: |
-          ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}
-          ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:latest
-          ${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ steps.to_deploy.outputs.env_name }}
+          ${{ inputs.registry_repository }}:${{ github.sha }}
+          ${{ inputs.registry_repository }}:latest
+          ${{ inputs.registry_repository }}:${{ steps.to_deploy.outputs.env_name }}
         push: ${{ github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true' }}
-        cache-from: type=registry,ref=${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }}
-        cache-to: type=registry,ref=${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ env.cache_tag }},mode=max
+        cache-from: type=registry_repository,ref=${{ inputs.registry_repository }}:${{ env.cache_tag }}
+        cache-to: type=registry_repository,ref=${{ inputs.registry_repository }}:${{ env.cache_tag }},mode=max
 
     - id: tag_output
       shell: bash
       if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
-      run: echo "::set-output name=tag::${{ inputs.registry }}/${{ steps.repo_lower.outputs.lowercase }}:${{ github.sha }}"
+      run: echo "::set-output name=tag::${{ inputs.registry_repository }}:${{ github.sha }}"

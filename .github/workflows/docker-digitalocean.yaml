@@ -11,11 +11,10 @@ on:
         required: false
         type: string
         default: "10"
-      registry:
-        description: "Registry host"
-        required: false
+      registry_endpoint:
+        description: "Registry endpoint"
+        required: true
         type: string
-        default: "registry.digitalocean.com"
       prune:
         description: "If it should prune old entries (works for GitHub or DigitalOcean)"
         required: false
@@ -70,22 +69,29 @@ jobs:
       - name: Log in to DO Container Registry 
         run: doctl registry login --expiry-seconds 600
 
+      - id: repo_lower
+        uses: ASzc/change-string-case-action@v1
+        with:
+          string: ${{ github.repository }}
+
+      - uses: jungwinter/split@master
+        id: split
+        with:
+          msg: ${{ steps.repo_lower.outputs.lowercase }}
+          separator: "/"
+          maxsplit: 1
+
       - name: Build/push docker image
         id: docker
-        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc6
+        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc12
         with:
           path: ${{ inputs.path }}
           keep_last: ${{ inputs.keep_last }}
-          registry: ${{ inputs.registry }}
+          registry_repository: ${{ inputs.registry_endpoint }}/${{ steps.split.outputs._1 }}
           filter_files: ${{ inputs.filter_files }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
-      - name: Install doctl
-        if: inputs.prune == true && startsWith(inputs.registry, 'registry.digitalocean.com') && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
-        uses: digitalocean/action-doctl@v2
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
       - name: Remove old images from Container Registry
         if: inputs.prune == true && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         uses: ripplr-io/docr-image-remove@v1

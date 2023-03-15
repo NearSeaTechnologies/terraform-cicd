@@ -95,7 +95,7 @@ jobs:
         if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         uses: ripplr-io/docr-image-remove@v1
         with:
-          image_repository: ${{ steps.repo_lower.outputs.lowercase }}
+          image_repository: ${{ steps.split.outputs._1 }}
           buffer_size: ${{ inputs.keep_last }}
 
       - name: DigitalOcean Registry Prune Old Tags

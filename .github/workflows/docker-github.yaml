@@ -82,10 +82,9 @@ jobs:
 
       - name: Build/push docker image
         id: docker
-        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc18
+        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc19
         with:
           path: ${{ inputs.path }}
-          keep_last: ${{ inputs.keep_last }}
           registry_repository: ${{ inputs.registry_host }}/${{ steps.repo_lower.outputs.lowercase }}
           filter_files: ${{ inputs.filter_files }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}

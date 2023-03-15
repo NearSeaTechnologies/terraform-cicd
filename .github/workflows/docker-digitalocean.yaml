@@ -10,7 +10,7 @@ on:
         description: "Number of docker tags to keep on the container registry"
         required: false
         type: string
-        default: "10"
+        default: "20"
       registry_endpoint:
         description: "Registry endpoint"
         required: true
@@ -83,17 +83,23 @@ jobs:
 
       - name: Build/push docker image
         id: docker
-        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc18
+        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc19
         with:
           path: ${{ inputs.path }}
-          keep_last: ${{ inputs.keep_last }}
           registry_repository: ${{ inputs.registry_endpoint }}/${{ steps.split.outputs._1 }}
           filter_files: ${{ inputs.filter_files }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
+      - name: Remove old images from Container Registry
+        if: inputs.prune == true && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        uses: ripplr-io/docr-image-remove@v1
+        with:
+          image_repository: ${{ steps.repo_lower.outputs.lowercase }}
+          buffer_size: ${{ inputs.keep_last }}
+
       - name: DigitalOcean Registry Prune Old Tags
-        if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        if: inputs.prune == true && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         uses: PierreAndreis/do-registry-prune-tags@1.0.1
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}

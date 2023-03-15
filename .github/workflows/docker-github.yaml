@@ -82,7 +82,7 @@ jobs:
 
       - name: Build/push docker image
         id: docker
-        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc16
+        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc18
         with:
           path: ${{ inputs.path }}
           keep_last: ${{ inputs.keep_last }}
@@ -93,7 +93,7 @@ jobs:
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1
-        if: inputs.prune == true && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         with:
           token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
           organization: ${{ github.repository_owner }}

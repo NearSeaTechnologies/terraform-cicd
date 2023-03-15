@@ -33,6 +33,9 @@ outputs:
   docker_tag:
     description: "The docker tag that was pushed"
     value: ${{ steps.tag_output.outputs.docker_tag }}
+  docker_filter:
+    description: "The docker filter result"
+    value: ${{ steps.filter.outputs.docker }}
 
 runs:
   using: "composite"

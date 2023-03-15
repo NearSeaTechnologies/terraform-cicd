@@ -83,7 +83,7 @@ jobs:
 
       - name: Build/push docker image
         id: docker
-        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc16
+        uses: NearSeaTechnologies/workflows/docker@1.7.6-rc18
         with:
           path: ${{ inputs.path }}
           keep_last: ${{ inputs.keep_last }}
@@ -93,7 +93,7 @@ jobs:
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
       - name: DigitalOcean Registry Prune Old Tags
-        if: inputs.prune == true && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
         uses: PierreAndreis/do-registry-prune-tags@1.0.1
         with:
           token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}

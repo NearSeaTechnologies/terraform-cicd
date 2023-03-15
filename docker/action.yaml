@@ -1,0 +1,84 @@
+name: Docker
+description: |
+  Base docker build/push action
+inputs:
+  path:
+    description: "relative path to the place where source code with Dockerfile is located"
+    required: false
+    default: "."
+  registry_repository:
+    description: "Registry repository"
+    required: true
+  filter_files:
+    required: false
+    default: |
+      - "**"
+    description: |
+      Run only if certain files changed. Syntax is a yaml list:
+      ```
+      - common/**
+      - config/**
+      ```
+  ALL_SECRETS:
+    description: "Secrets to inject"
+    required: true
+  OTHER_ENVS:
+    description: "Other envs to inject"
+    required: false
+outputs:
+  docker_tag:
+    description: "The docker tag that was pushed"
+    value: ${{ steps.tag_output.outputs.docker_tag }}
+  docker_filter:
+    description: "The docker filter result"
+    value: ${{ steps.filter.outputs.docker }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: To deploy
+      id: to_deploy
+      uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
+      with:
+        ALL_SECRETS: ${{ inputs.ALL_SECRETS }}
+        OTHER_ENVS: ${{ inputs.OTHER_ENVS }}
+
+    - uses: dorny/paths-filter@v2.10.2
+      id: filter
+      with:
+        base: ${{ github.ref }}
+        filters: |
+          docker:
+          ${{ inputs.filter_files }}
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+
+    - id: repo_lower
+      uses: ASzc/change-string-case-action@v1
+      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+      with:
+        string: ${{ github.repository }}
+
+    - name: Build image and push to Docker Hub and GitHub Container Registry
+      uses: docker/build-push-action@v2
+      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+      env:
+        cache_tag: buildcache
+      with:
+        # relative path to the place where source code with Dockerfile is located
+        context: ${{ inputs.path }}
+        # Note: tags has to be all lower-case
+        tags: |
+          ${{ inputs.registry_repository }}:${{ github.sha }}
+          ${{ inputs.registry_repository }}:latest
+          ${{ inputs.registry_repository }}:${{ steps.to_deploy.outputs.env_name }}
+        push: ${{ github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true' }}
+        cache-from: type=registry,ref=${{ inputs.registry_repository }}:${{ env.cache_tag }}
+        cache-to: type=registry,ref=${{ inputs.registry_repository }}:${{ env.cache_tag }},mode=max,compression=zstd
+
+    - id: tag_output
+      shell: bash
+      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+      run: echo "docker_tag=${{ inputs.registry_repository }}:${{ github.sha }}" >> $GITHUB_OUTPUT

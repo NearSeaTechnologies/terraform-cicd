@@ -36,7 +36,7 @@ jobs:
   plan:
     runs-on: ubuntu-latest
     name: Plan/apply terraform
-    timeout-minutes: 30
+    timeout-minutes: 5
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1

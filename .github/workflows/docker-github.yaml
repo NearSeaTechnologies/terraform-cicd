@@ -92,7 +92,7 @@ jobs:
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1
-        if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
+        if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
         with:
           token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
           organization: ${{ github.repository_owner }}

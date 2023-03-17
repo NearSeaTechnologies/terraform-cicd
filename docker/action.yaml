@@ -32,6 +32,9 @@ outputs:
   docker_filter:
     description: "The docker filter result"
     value: ${{ steps.filter.outputs.docker }}
+  should_deploy:
+    description: "If deploy should happen"
+    value: ${{ steps.to_deploy.outputs.should_deploy  }}
 
 runs:
   using: "composite"

@@ -20,6 +20,11 @@ on:
         required: false
         type: boolean
         default: true
+      disableGc:
+        description: "If it should disable garbage collection"
+        required: false
+        type: boolean
+        default: true
       exclude_prune:
         description: "Tags to exclude, on the prune"
         required: false
@@ -98,8 +103,9 @@ jobs:
           image_repository: ${{ steps.split.outputs._1 }}
           buffer_size: ${{ inputs.keep_last }}
 
-      # - name: DigitalOcean Registry Prune Old Tags
-      #   if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
-      #   uses: PierreAndreis/do-registry-prune-tags@1.0.1
-      #   with:
-      #     token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+      - name: DigitalOcean Registry Prune Old Tags
+        if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
+        uses: PierreAndreis/do-registry-prune-tags@1.0.1
+        with:
+          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+          disableGc: ${{ inputs.disableGc }}

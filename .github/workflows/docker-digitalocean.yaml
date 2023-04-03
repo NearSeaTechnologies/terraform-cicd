@@ -15,11 +15,6 @@ on:
         description: "Registry endpoint"
         required: true
         type: string
-      prune:
-        description: "If it should prune old entries (works for GitHub or DigitalOcean)"
-        required: false
-        type: boolean
-        default: true
       disableGc:
         description: "If it should disable garbage collection"
         required: false
@@ -47,7 +42,7 @@ on:
       OTHER_ENVS:
         required: false
       DIGITALOCEAN_ACCESS_TOKEN:
-        description: "Digital ocean access token for prune (if DO's container registry is used)"
+        description: "Digital ocean access token"
         required: false
     outputs:
       docker_tag:
@@ -97,15 +92,9 @@ jobs:
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 
       - name: Remove old images from Container Registry
-        if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
-        uses: ripplr-io/docr-image-remove@v1
+        if: (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
+        uses: NearSeaTechnologies/docr-image-remove@v1.1-rc
         with:
           image_repository: ${{ steps.split.outputs._1 }}
           buffer_size: ${{ inputs.keep_last }}
-
-      - name: DigitalOcean Registry Prune Old Tags
-        if: inputs.prune == true && (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
-        uses: PierreAndreis/do-registry-prune-tags@1.0.1
-        with:
-          token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
-          disableGc: ${{ inputs.disableGc }}
+          exclude: \b(?:latest|${{ inputs.exclude_prune }})\b

@@ -93,7 +93,7 @@ jobs:
 
       - name: Remove old images from Container Registry
         if: (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
-        uses: NearSeaTechnologies/docr-image-remove@v1.1-rc4
+        uses: NearSeaTechnologies/docr-image-remove@v1.1.1
         with:
           image_repository: ${{ steps.split.outputs._1 }}
           buffer_size: ${{ inputs.keep_last }}

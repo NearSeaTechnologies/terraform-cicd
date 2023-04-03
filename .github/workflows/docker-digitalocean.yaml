@@ -97,4 +97,4 @@ jobs:
         with:
           image_repository: ${{ steps.split.outputs._1 }}
           buffer_size: ${{ inputs.keep_last }}
-          exclude: \b(?:latest|${{ inputs.exclude_prune }})\b
+          exclude: \b\(?:latest|${{ inputs.exclude_prune }}\)\b

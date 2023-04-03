@@ -78,8 +78,8 @@ runs:
           ${{ inputs.registry_repository }}:latest
           ${{ inputs.registry_repository }}:${{ steps.to_deploy.outputs.env_name }}
         push: ${{ github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true' }}
-        cache-from: type=registry,ref=${{ inputs.registry_repository }}:${{ env.cache_tag }}
-        cache-to: type=registry,ref=${{ inputs.registry_repository }}:${{ env.cache_tag }},mode=max,compression=zstd
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
 
     - id: tag_output
       shell: bash

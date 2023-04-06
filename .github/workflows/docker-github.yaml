@@ -87,7 +87,7 @@ jobs:
 
       - name: Build/push docker image
         id: docker
-        uses: NearSeaTechnologies/workflows/docker@1.7.11-rc
+        uses: NearSeaTechnologies/workflows/docker@1.7.11-rc3
         with:
           path: ${{ inputs.path }}
           registry_repository: ${{ inputs.registry_host }}/${{ steps.repo_lower.outputs.lowercase }}

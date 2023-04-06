@@ -9,7 +9,6 @@ inputs:
   registry_repository:
     description: "Registry repository"
     required: true
-    default: "."
   registry_cache:
     description: "If the registry should be used for cache instead of GitHub's cache"
     required: false

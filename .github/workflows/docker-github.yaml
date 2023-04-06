@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: true
+      registry_cache:
+        description: "If the registry should be used for cache instead of GitHub's cache"
+        required: false
+        type: boolean
+        default: false
       exclude_prune:
         description: "Tags to exclude, on the prune"
         required: false

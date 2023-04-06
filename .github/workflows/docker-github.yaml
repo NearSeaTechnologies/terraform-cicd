@@ -21,6 +21,11 @@ on:
         required: false
         type: boolean
         default: true
+      registry_cache:
+        description: "If the registry should be used for cache instead of GitHub's cache"
+        required: false
+        type: boolean
+        default: false
       exclude_prune:
         description: "Tags to exclude, on the prune"
         required: false
@@ -82,11 +87,12 @@ jobs:
 
       - name: Build/push docker image
         id: docker
-        uses: NearSeaTechnologies/workflows/docker@1.7.7-rc2
+        uses: NearSeaTechnologies/workflows/docker@1.7.11
         with:
           path: ${{ inputs.path }}
           registry_repository: ${{ inputs.registry_host }}/${{ steps.repo_lower.outputs.lowercase }}
           filter_files: ${{ inputs.filter_files }}
+          registry_cache: ${{ inputs.registry_cache }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
 

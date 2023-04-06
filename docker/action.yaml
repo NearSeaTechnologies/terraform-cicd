@@ -9,6 +9,10 @@ inputs:
   registry_repository:
     description: "Registry repository"
     required: true
+  registry_cache:
+    description: "If the registry should be used for cache instead of GitHub's cache"
+    required: false
+    default: 'false'
   filter_files:
     required: false
     default: |
@@ -64,11 +68,28 @@ runs:
       with:
         string: ${{ github.repository }}
 
+    - id: cache_type
+      shell: bash
+      env:
+        registry_cache: ${{ inputs.registry_cache }}
+        registry_repository: ${{ inputs.registry_repository }}
+        cache_tag: buildcache
+        SHA: ${{ github.sha }}
+      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+      run: |
+        if [[ "$registry_cache" == "false" ]]; then
+          FROM="type=gha"
+          TO="type=gha,mode=max"
+        else
+          FROM="type=registry,ref=$registry_repository:$cache_tag"
+          TO="type=registry,ref=${{ inputs.registry_repository }}:${{ env.cache_tag }},mode=max,compression=zstd"
+        fi
+        echo "CACHE_FROM=$FROM" >> $GITHUB_OUTPUT
+        echo "CACHE_TO=$TO" >> $GITHUB_OUTPUT
+
     - name: Build image and push to Docker Hub and GitHub Container Registry
       uses: docker/build-push-action@v2
       if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
-      env:
-        cache_tag: buildcache
       with:
         # relative path to the place where source code with Dockerfile is located
         context: ${{ inputs.path }}
@@ -78,8 +99,9 @@ runs:
           ${{ inputs.registry_repository }}:latest
           ${{ inputs.registry_repository }}:${{ steps.to_deploy.outputs.env_name }}
         push: ${{ github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy == 'true' }}
-        cache-from: type=gha
-        cache-to: type=gha,mode=max
+        cache-from: ${{ steps.cache_type.outputs.CACHE_FROM }}
+        cache-to: ${{ steps.cache_type.outputs.CACHE_TO }}
+
 
     - id: tag_output
       shell: bash

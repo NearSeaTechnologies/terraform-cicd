@@ -15,6 +15,18 @@ on:
         type: string
         description: "Docs file path (from the terraform path input)"
         default: "../terraformDocs.md"
+      inject_other_envs:
+        required: false
+        type: boolean
+        default: false
+        description: Only used if always_run == false
+    secrets:
+      ALL_SECRETS:
+        required: false
+        description: Required if always_run == false
+      OTHER_ENVS:
+        required: false
+        description: Only used if always_run == false
 permissions:
   contents: read
   actions: 'write'

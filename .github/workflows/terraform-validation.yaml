@@ -16,6 +16,7 @@ on:
         description: "Docs file path (from the terraform path input)"
         default: "../terraformDocs.md"
 permissions:
+  contents: read
   actions: 'write'
 
 env:

@@ -6,11 +6,17 @@ on:
         required: false
         type: string
         default: "terraform"
+      always_run:
+        required: false
+        type: boolean
+        default: true
       docs_file:
         required: false
         type: string
         description: "Docs file path (from the terraform path input)"
         default: "../terraformDocs.md"
+permissions:
+  actions: 'write'
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -30,6 +36,24 @@ jobs:
           filters: |
             terraform:
               - '${{ inputs.path }}/**'
+
+      - name: To deploy
+        id: to_deploy
+        uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
+        if: ${{ !inputs.always_run }}
+        with:
+          inject_secrets: true
+          inject_other_envs: ${{ inputs.inject_other_envs }}
+          ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
+          OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
+
+      - name: Skip normal branches
+        if: ${{ !inputs.always_run && github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run cancel ${{ github.run_id }}
+          gh run watch ${{ github.run_id }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1

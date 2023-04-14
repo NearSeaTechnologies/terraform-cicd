@@ -45,6 +45,23 @@ on:
           - common/**
           - config/**
           ```
+      always_run:
+        description: If it should run for every push or only on Merge Requests and deployment branches
+        required: false
+        type: boolean
+        default: false
+      inject_other_envs:
+        required: false
+        type: boolean
+        default: false
+        description: Only used if always_run == false
+    secrets:
+      ALL_SECRETS:
+        required: false
+        description: Required if always_run == false
+      OTHER_ENVS:
+        required: false
+        description: Only used if always_run == false
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -72,6 +89,25 @@ jobs:
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
+
+      - name: To deploy
+        id: to_deploy
+        uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
+        if: ${{ !inputs.always_run }}
+        with:
+          inject_secrets: true
+          inject_other_envs: ${{ inputs.inject_other_envs }}
+          ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
+          OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
+
+      - name: Skip normal branches
+        if: ${{ !inputs.always_run && github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run cancel ${{ github.run_id }}
+          gh run watch ${{ github.run_id }}
+
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ inputs.node_version }}
@@ -94,6 +130,25 @@ jobs:
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
+
+      - name: To deploy
+        id: to_deploy
+        uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
+        if: ${{ !inputs.always_run }}
+        with:
+          inject_secrets: true
+          inject_other_envs: ${{ inputs.inject_other_envs }}
+          ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
+          OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
+
+      - name: Skip normal branches
+        if: ${{ !inputs.always_run && github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy != 'true' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh run cancel ${{ github.run_id }}
+          gh run watch ${{ github.run_id }}
+
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ inputs.node_version }}

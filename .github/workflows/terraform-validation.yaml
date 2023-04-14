@@ -7,9 +7,10 @@ on:
         type: string
         default: "terraform"
       always_run:
+        description: If it should run for every push or only on Merge Requests and deployment branches
         required: false
         type: boolean
-        default: true
+        default: false
       docs_file:
         required: false
         type: string

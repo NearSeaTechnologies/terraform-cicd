@@ -42,6 +42,11 @@ on:
           - common/**
           - config/**
           ```
+      always_run:
+        description: If it should run for every push or only on Merge Requests and deployment branches
+        required: false
+        type: boolean
+        default: false
     secrets:
       username:
         description: "Registry username"
@@ -95,6 +100,7 @@ jobs:
           registry_cache: ${{ inputs.registry_cache }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
+          always_run: ${{ inputs.always_run }}
 
       - name: GHCR Prune
         uses: freefair/action-ghcr-prune@v0.4.1

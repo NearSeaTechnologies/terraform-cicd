@@ -29,7 +29,8 @@ on:
         description: Only used if always_run == false
 permissions:
   contents: read
-  actions: 'write'
+  actions: write
+  pull-requests: write
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

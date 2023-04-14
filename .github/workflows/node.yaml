@@ -62,6 +62,10 @@ on:
       OTHER_ENVS:
         required: false
         description: Only used if always_run == false
+permissions:
+  contents: read
+  actions: write
+  pull-requests: write
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

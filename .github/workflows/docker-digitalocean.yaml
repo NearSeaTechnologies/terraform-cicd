@@ -53,6 +53,10 @@ on:
       docker_tag:
         description: "The docker tag that was pushed"
         value: ${{ jobs.build.outputs.docker_tag }}
+permissions:
+  contents: read
+  actions: write
+  pull-requests: write
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -95,6 +99,7 @@ jobs:
           filter_files: ${{ inputs.filter_files }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
+          always_run: ${{ inputs.always_run }}
 
       - name: Remove old images from Container Registry
         if: (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')

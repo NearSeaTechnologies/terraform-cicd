@@ -36,14 +36,17 @@ permissions:
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
+
 jobs:
-  validate-format:
+  should_run:
     runs-on: ubuntu-latest
-    name: Validate terraform configuration
+    outputs:
+      node: ${{ steps.filter.outputs.node }}
+      to_deploy: ${{ steps.to_deploy.outputs.should_deploy }}
+      should_skip: ${{ steps.should_skip.outputs.should_skip }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
-
       - uses: dorny/paths-filter@v2.10.2
         id: filter
         with:
@@ -51,7 +54,6 @@ jobs:
           filters: |
             terraform:
               - '${{ inputs.path }}/**'
-
       - name: To deploy
         id: to_deploy
         uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
@@ -61,34 +63,34 @@ jobs:
           inject_other_envs: ${{ inputs.inject_other_envs }}
           ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
-
-      - name: Skip normal branches
+      - id: should_skip
+        shell: bash
         if: ${{ !inputs.always_run && github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy != 'true' }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          gh run cancel ${{ github.run_id }}
-          gh run watch ${{ github.run_id }}
+        run: echo "should_skip=true" >> $GITHUB_OUTPUT
+
+  validate-format:
+    runs-on: ubuntu-latest
+    name: Validate terraform configuration
+    if: ${{ needs.should_run.outputs.terraform == 'true' && needs.should_run.outputs.should_skip != 'true' }}
+    steps:
+      - name: Git checkout
+        uses: nschloe/action-cached-lfs-checkout@v1
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v1
-        if: steps.filter.outputs.terraform == 'true'
       - name: Terraform Format
         id: fmt
-        if: steps.filter.outputs.terraform == 'true'
         run: terraform -chdir=${{ inputs.path }} fmt -check
       - name: Terraform Init
         id: init
-        if: steps.filter.outputs.terraform == 'true'
         run: terraform -chdir=${{ inputs.path }} init -input=false -backend=false
       - name: Terraform Validate
         id: validate
-        if: steps.filter.outputs.terraform == 'true'
         run: terraform -chdir=${{ inputs.path }} validate -no-color
 
       - name: Comment docs on PR
         uses: NejcZdovc/comment-pr@v1
-        if: steps.filter.outputs.terraform == 'true' && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         with:
           identifier: validation
           message: |
@@ -108,21 +110,13 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
+    if: ${{ needs.should_run.outputs.node == 'true' && inputs.run_tests == true && needs.should_run.outputs.should_skip != 'true' }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
 
-      - uses: dorny/paths-filter@v2.10.2
-        id: filter
-        with:
-          base: ${{ github.ref }}
-          filters: |
-            terraform:
-              - '${{ inputs.path }}/**'
-
       - name: Render terraform docs inside the terraformDocs.md
         uses: terraform-docs/gh-actions@v0.11.0
-        if: steps.filter.outputs.terraform == 'true'
         with:
           working-dir: ${{ inputs.path }}
           output-file: ${{ inputs.docs_file }}
@@ -131,7 +125,7 @@ jobs:
       - name: Create TF Docs Pull Request
         id: tf_docs_pr
         uses: peter-evans/create-pull-request@v4.0.4
-        if: steps.filter.outputs.terraform == 'true' && github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
+        if: github.event_name != 'pull_request' && github.ref_name == github.event.repository.default_branch
         with:
           delete-branch: true
           branch: chore/update-tf-docs
@@ -142,7 +136,7 @@ jobs:
 
       - name: Comment docs on PR
         uses: NejcZdovc/comment-pr@v1
-        if: steps.filter.outputs.terraform == 'true' && github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request'
         with:
           file: "../../${{ inputs.path }}/${{ inputs.docs_file }}"
           identifier: docs

@@ -102,7 +102,7 @@ jobs:
           always_run: ${{ inputs.always_run }}
 
       - name: Remove old images from Container Registry
-        if: (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
+        if: steps.docker.outputs.should_skip != 'true' && (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
         uses: NearSeaTechnologies/docr-image-remove@v1.1.1
         with:
           image_repository: ${{ steps.split.outputs._1 }}

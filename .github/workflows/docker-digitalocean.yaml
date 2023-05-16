@@ -53,10 +53,6 @@ on:
       docker_tag:
         description: "The docker tag that was pushed"
         value: ${{ jobs.build.outputs.docker_tag }}
-permissions:
-  contents: read
-  actions: write
-  pull-requests: write
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

@@ -45,6 +45,23 @@ on:
           - common/**
           - config/**
           ```
+      always_run:
+        description: If it should run for every push or only on Merge Requests and deployment branches
+        required: false
+        type: boolean
+        default: false
+      inject_other_envs:
+        required: false
+        type: boolean
+        default: false
+        description: Only used if always_run == false
+    secrets:
+      ALL_SECRETS:
+        required: false
+        description: Required if always_run == false
+      OTHER_ENVS:
+        required: false
+        description: Only used if always_run == false
 
 env:
   GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
@@ -54,6 +71,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       node: ${{ steps.filter.outputs.node }}
+      to_deploy: ${{ steps.to_deploy.outputs.should_deploy }}
+      should_skip: ${{ steps.should_skip.outputs.should_skip }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
@@ -64,14 +83,28 @@ jobs:
           filters: |
             node:
             ${{ inputs.filter_files }}
+      - name: To deploy
+        id: to_deploy
+        uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
+        if: ${{ !inputs.always_run }}
+        with:
+          inject_secrets: true
+          inject_other_envs: ${{ inputs.inject_other_envs }}
+          ALL_SECRETS: ${{ secrets.ALL_SECRETS }}
+          OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
+      - id: should_skip
+        shell: bash
+        if: ${{ !inputs.always_run && github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy != 'true' }}
+        run: echo "should_skip=true" >> $GITHUB_OUTPUT
 
   prettier:
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_prettier == true }}
+    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_prettier == true && needs.changes.outputs.should_skip != 'true' }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
+
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ inputs.node_version }}
@@ -90,10 +123,11 @@ jobs:
   test:
     runs-on: ubuntu-latest
     needs: changes
-    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_tests == true }}
+    if: ${{ needs.changes.outputs.node == 'true' && inputs.run_tests == true && needs.changes.outputs.should_skip != 'true' }}
     steps:
       - name: Git checkout
         uses: nschloe/action-cached-lfs-checkout@v1
+
       - uses: actions/setup-node@v2
         with:
           node-version: ${{ inputs.node_version }}

@@ -23,6 +23,10 @@ inputs:
       - common/**
       - config/**
       ```
+  always_run:
+    description: If it should run for every push or only on Merge Requests and deployment branches
+    required: false
+    default: 'false'
   ALL_SECRETS:
     description: "Secrets to inject"
     required: true
@@ -36,6 +40,9 @@ outputs:
   docker_filter:
     description: "The docker filter result"
     value: ${{ steps.filter.outputs.docker }}
+  should_skip:
+    description: "If should skip build"
+    value: ${{ steps.should_skip.outputs.should_skip  }}
   should_deploy:
     description: "If deploy should happen"
     value: ${{ steps.to_deploy.outputs.should_deploy  }}
@@ -43,13 +50,6 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: To deploy
-      id: to_deploy
-      uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
-      with:
-        ALL_SECRETS: ${{ inputs.ALL_SECRETS }}
-        OTHER_ENVS: ${{ inputs.OTHER_ENVS }}
-
     - uses: dorny/paths-filter@v2.10.2
       id: filter
       with:
@@ -58,15 +58,21 @@ runs:
           docker:
           ${{ inputs.filter_files }}
 
+    - name: To deploy
+      id: to_deploy
+      uses: NearSeaTechnologies/workflows/should-deploy@1.5.0
+      with:
+        ALL_SECRETS: ${{ inputs.ALL_SECRETS }}
+        OTHER_ENVS: ${{ inputs.OTHER_ENVS }}
+
+    - id: should_skip
+      shell: bash
+      if: ${{ !inputs.always_run && github.event_name != 'pull_request' && steps.to_deploy.outputs.should_deploy != 'true' }}
+      run: echo "should_skip=true" >> $GITHUB_OUTPUT
+
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v2
-      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
-
-    - id: repo_lower
-      uses: ASzc/change-string-case-action@v1
-      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
-      with:
-        string: ${{ github.repository }}
+      if: steps.should_skip.outputs.should_skip != 'true' && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
 
     - id: cache_type
       shell: bash
@@ -75,7 +81,7 @@ runs:
         registry_repository: ${{ inputs.registry_repository }}
         cache_tag: buildcache
         SHA: ${{ github.sha }}
-      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+      if: steps.should_skip.outputs.should_skip != 'true' && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
       run: |
         if [[ "$registry_cache" == "false" ]]; then
           FROM="type=gha"
@@ -89,7 +95,7 @@ runs:
 
     - name: Build image and push to Docker Hub and GitHub Container Registry
       uses: docker/build-push-action@v2
-      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+      if: steps.should_skip.outputs.should_skip != 'true' && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
       with:
         # relative path to the place where source code with Dockerfile is located
         context: ${{ inputs.path }}
@@ -105,5 +111,5 @@ runs:
 
     - id: tag_output
       shell: bash
-      if: steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true'
+      if: steps.should_skip.outputs.should_skip != 'true' && (steps.filter.outputs.docker == 'true' || steps.to_deploy.outputs.should_deploy == 'true')
       run: echo "docker_tag=${{ inputs.registry_repository }}:${{ github.sha }}" >> $GITHUB_OUTPUT

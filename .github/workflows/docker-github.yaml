@@ -102,13 +102,14 @@ jobs:
           OTHER_ENVS: ${{ secrets.OTHER_ENVS }}
           always_run: ${{ inputs.always_run }}
 
-      - name: GHCR Prune
-        uses: freefair/action-ghcr-prune@v0.4.1
+      - name: GHCR Pruning
+        uses: vlaurin/action-ghcr-prune@v0.5.0
         if: inputs.prune == true && steps.docker.outputs.should_skip != 'true' && (steps.docker.outputs.docker_filter == 'true' || steps.docker.outputs.should_deploy == 'true')
         with:
           token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
           organization: ${{ github.repository_owner }}
           container: ${{ github.event.repository.name }}
           keep-last: ${{ inputs.keep_last }}
-          tag-regex-exclude: \b(?:latest|${{ env.cache_tag }}|${{ inputs.exclude_prune }})\b
-          untagged: true
+          prune-untagged: true
+          keep-tags-regexes: |
+            \b(?:latest|${{ env.cache_tag }}|${{ inputs.exclude_prune }})\b$
